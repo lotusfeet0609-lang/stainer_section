@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assy Foot Valve (IS:10805) - Isolated Parts & Section Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background-color: #0b0e14;
+      color: #e6edf3;
+      overflow: hidden;
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    #viewport {
+      flex: 1;
+      height: 100%;
+      position: relative;
+    }
+    #sidebar {
+      width: 370px;
+      background: #141820;
+      border-left: 1px solid #283142;
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+      gap: 12px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: #1e3a5f;
+      color: #60a5fa;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .section-title {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #8b949e;
+      letter-spacing: 0.6px;
+      margin-top: 4px;
+    }
+    .part-selector-box {
+      background: #1b212c;
+      border: 1px solid #2f3a4f;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .select-dropdown {
+      width: 100%;
+      background: #242c3b;
+      color: #ffffff;
+      border: 1px solid #3d4a63;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .part-button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .part-btn {
+      background: #202735;
+      border: 1px solid #2f3a4f;
+      color: #cbd5e1;
+      padding: 8px 6px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .part-btn:hover {
+      background: #2c3649;
+      border-color: #4b5b7a;
+    }
+    .part-btn.active {
+      background: #1d4ed8;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+    .indicator-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .control-card {
+      background: #1b212c;
+      border: 1px solid #2f3a4f;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: #3b82f6;
+      cursor: pointer;
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    button.tool-btn {
+      background: #202735;
+      border: 1px solid #2f3a4f;
+      color: #cbd5e1;
+      padding: 9px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+    button.tool-btn:hover {
+      background: #2c3649;
+    }
+    button.tool-btn.active {
+      background: #1d4ed8;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+    .spec-card {
+      background: #0f131a;
+      border-left: 3px solid #3b82f6;
+      padding: 10px 12px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.76rem;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+    .spec-card strong {
+      color: #e2e8f0;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <div id="viewport"></div>
+
+  <div id="sidebar">
+    <div>
+      <h1>Assy Foot Valve (IS:10805)</h1>
+      <span class="badge">Drawing 2224.38.21 1/1 • VFJ</span>
+    </div>
+
+    <!-- Isolated Section Option -->
+    <div class="section-title">Inspect Part Separately</div>
+    <div class="part-selector-box">
+      <select id="part-dropdown" class="select-dropdown">
+        <option value="all">Full Assembly (All Parts)</option>
+        <option value="strainer">Item 2: Spherical Strainer Dome</option>
+        <option value="housing">Item 1: Valve Housing Body</option>
+        <option value="plate">Item 3: Horseshoe Disc Plate</option>
+        <option value="leather">Item 4: Leather Disc Face</option>
+        <option value="disc">Item 5: Brass Backing Disc</option>
+        <option value="pin">Items 9-11: M8 Central Clamping Bolt</option>
+        <option value="bolts">Items 6-8: M10 Flange Bolts & Nuts</option>
+      </select>
+
+      <div class="part-button-grid">
+        <button class="part-btn active" data-part="all">
+          <span class="indicator-dot" style="background:#38bdf8;"></span>Full Assembly
+        </button>
+        <button class="part-btn" data-part="strainer">
+          <span class="indicator-dot" style="background:#b57c2e;"></span>Item 2: Strainer
+        </button>
+        <button class="part-btn" data-part="housing">
+          <span class="indicator-dot" style="background:#c49a45;"></span>Item 1: Housing
+        </button>
+        <button class="part-btn" data-part="plate">
+          <span class="indicator-dot" style="background:#94a3b8;"></span>Item 3: Plate
+        </button>
+        <button class="part-btn" data-part="leather">
+          <span class="indicator-dot" style="background:#85441e;"></span>Item 4: Leather
+        </button>
+        <button class="part-btn" data-part="disc">
+          <span class="indicator-dot" style="background:#d4af37;"></span>Item 5: Disc
+        </button>
+      </div>
+    </div>
+
+    <!-- Isolated Part Metadata -->
+    <div class="spec-card" id="part-meta">
+      <strong>Active View:</strong> Full Assembly<br>
+      • Strainer on top (inflow), Housing body at bottom.<br>
+      • Use the controls below to explode or inspect internal cross sections.
+    </div>
+
+    <!-- Assembly & Flow Controls -->
+    <div class="section-title">Controls & Views</div>
+    <div class="control-card">
+      <div class="control-header">
+        <span>Explode Assembly</span>
+        <span id="explode-val">0%</span>
+      </div>
+      <input type="range" id="explode-slider" min="0" max="100" value="0">
+    </div>
+
+    <div class="control-card">
+      <div class="control-header">
+        <span>Flap Swing</span>
+        <span id="valve-angle-deg">35° (Open)</span>
+      </div>
+      <input type="range" id="flap-slider" min="0" max="45" value="35">
+    </div>
+
+    <div class="btn-grid">
+      <button class="tool-btn" id="btn-cutaway">
+        <span>Section Cut</span>
+        <span id="cut-status">OFF</span>
+      </button>
+      <button class="tool-btn" id="btn-wireframe">
+        <span>Wireframe</span>
+        <span id="wire-status">OFF</span>
+      </button>
+      <button class="tool-btn active" id="btn-flow">
+        <span>Water Flow</span>
+        <span id="flow-status">ON</span>
+      </button>
+      <button class="tool-btn active" id="btn-autorotate">
+        <span>Auto Orbit</span>
+        <span id="rot-status">ON</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const container = document.getElementById('viewport');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0d12);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 1, 2000);
+    camera.position.set(0, 80, 260);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.localClippingEnabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.0;
+    controls.target.set(0, 0, 0);
+
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const light1 = new THREE.DirectionalLight(0xffffff, 1.2);
+    light1.position.set(120, 200, 150);
+    scene.add(light1);
+    const light2 = new THREE.DirectionalLight(0x58a6ff, 0.7);
+    light2.position.set(-120, -100, -150);
+    scene.add(light2);
+
+    const grid = new THREE.GridHelper(360, 36, 0x1f2937, 0x111827);
+    grid.position.y = -130;
+    scene.add(grid);
+
+    const clipPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+    let cutawayActive = false;
+
+    // Materials
+    const matStrainer = new THREE.MeshStandardMaterial({
+      color: 0xb57c2e, roughness: 0.38, metalness: 0.75, side: THREE.DoubleSide
+    });
+    const matHousing = new THREE.MeshStandardMaterial({
+      color: 0xc49a45, roughness: 0.35, metalness: 0.75, side: THREE.DoubleSide
+    });
+    const matPlate = new THREE.MeshStandardMaterial({
+      color: 0xa0aab8, roughness: 0.3, metalness: 0.85, side: THREE.DoubleSide
+    });
+    const matLeather = new THREE.MeshStandardMaterial({
+      color: 0x85441e, roughness: 0.85, metalness: 0.05, side: THREE.DoubleSide
+    });
+    const matDisc = new THREE.MeshStandardMaterial({
+      color: 0xd4af37, roughness: 0.3, metalness: 0.85, side: THREE.DoubleSide
+    });
+    const matSteel = new THREE.MeshStandardMaterial({
+      color: 0xa4b1c2, roughness: 0.25, metalness: 0.9, side: THREE.DoubleSide
+    });
+
+    const allMaterials = [matStrainer, matHousing, matPlate, matLeather, matDisc, matSteel];
+
+    // Assembly Groups
+    const groupAssembly = new THREE.Group();
+    scene.add(groupAssembly);
+
+    const parts = {
+      strainer: new THREE.Group(),
+      housing: new THREE.Group(),
+      plate: new THREE.Group(),
+      leather: new THREE.Group(),
+      disc: new THREE.Group(),
+      pin: new THREE.Group(),
+      bolts: new THREE.Group()
+    };
+
+    // Flap hinge parent (holds leather, disc, pin)
+    const flapHinge = new THREE.Group();
+    flapHinge.position.set(-45, 0, 0);
+
+    const flapSubGroup = new THREE.Group();
+    flapSubGroup.position.set(45, 0, 0);
+    flapHinge.add(flapSubGroup);
+
+    // Build hierarchy
+    groupAssembly.add(parts.strainer);
+    groupAssembly.add(parts.housing);
+    groupAssembly.add(parts.plate);
+    groupAssembly.add(flapHinge);
+    groupAssembly.add(parts.bolts);
+
+    flapSubGroup.add(parts.leather);
+    flapSubGroup.add(parts.disc);
+    flapSubGroup.add(parts.pin);
+
+    // =========================================================================
+    // 1. ITEM 2: SPHERICAL STRAINER DOME (TOP)
+    // =========================================================================
+    function buildStrainer() {
+      const g = parts.strainer;
+
+      // Flange ring
+      const flangeShape = new THREE.Shape();
+      flangeShape.absarc(0, 0, 74, 0, Math.PI * 2, false);
+      const bore = new THREE.Path();
+      bore.absarc(0, 0, 53, 0, Math.PI * 2, true);
+      flangeShape.holes.push(bore);
+
+      const fGeom = new THREE.ExtrudeGeometry(flangeShape, { depth: 8, bevelEnabled: false, curveSegments: 48 });
+      fGeom.rotateX(Math.PI / 2);
+      const fMesh = new THREE.Mesh(fGeom, matStrainer);
+      fMesh.position.y = 8;
+      g.add(fMesh);
+
+      // 4 Bolt ears
+      for (let a of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
+        const earShape = new THREE.Shape();
+        earShape.absarc(69, 0, 13.5, 0, Math.PI * 2, false);
+        const hole = new THREE.Path();
+        hole.absarc(69, 0, 5.5, 0, Math.PI * 2, true);
+        earShape.holes.push(hole);
+
+        const earGeom = new THREE.ExtrudeGeometry(earShape, { depth: 8, bevelEnabled: false, curveSegments: 24 });
+        earGeom.rotateX(Math.PI / 2);
+        const earMesh = new THREE.Mesh(earGeom, matStrainer);
+        earMesh.position.y = 8;
+
+        const earHolder = new THREE.Group();
+        earHolder.rotation.y = a;
+        earHolder.add(earMesh);
+        g.add(earHolder);
+      }
+
+      // Middle spherical ring band
+      const bandProfile = [
+        new THREE.Vector2(37, 23), new THREE.Vector2(42, 23),
+        new THREE.Vector2(39, 29), new THREE.Vector2(34, 29)
+      ];
+      g.add(new THREE.Mesh(new THREE.LatheGeometry(bandProfile, 48), matStrainer));
+
+      // Apex crown cap (Depth 52mm)
+      const capProfile = [
+        new THREE.Vector2(0, 52), new THREE.Vector2(12, 50),
+        new THREE.Vector2(11, 45), new THREE.Vector2(0, 45)
+      ];
+      g.add(new THREE.Mesh(new THREE.LatheGeometry(capProfile, 32), matStrainer));
+
+      // 18 Outer Curved Ribs (Detail A slots)
+      const curveA = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(53, 8, 0), new THREE.Vector3(50, 16, 0),
+        new THREE.Vector3(44, 22, 0), new THREE.Vector3(38, 25, 0)
+      ]);
+      const ribAGeom = new THREE.TubeGeometry(curveA, 16, 3.2, 8, false);
+      for (let i = 0; i < 18; i++) {
+        const th = (i / 18) * Math.PI * 2;
+        const rib = new THREE.Mesh(ribAGeom, matStrainer);
+        rib.rotation.y = th;
+        g.add(rib);
+      }
+
+      // 10 Crown Curved Ribs (Detail B slots)
+      const curveB = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(36, 28, 0), new THREE.Vector3(29, 36, 0),
+        new THREE.Vector3(21, 43, 0), new THREE.Vector3(12, 48, 0)
+      ]);
+      const ribBGeom = new THREE.TubeGeometry(curveB, 16, 3.0, 8, false);
+      for (let j = 0; j < 10; j++) {
+        const th = (j / 10) * Math.PI * 2 + (Math.PI / 18);
+        const rib = new THREE.Mesh(ribBGeom, matStrainer);
+        rib.rotation.y = th;
+        g.add(rib);
+      }
+    }
+
+    // =========================================================================
+    // 2. ITEM 1: HOUSING BODY (BOTTOM)
+    // =========================================================================
+    function buildHousing() {
+      const g = parts.housing;
+
+      const flangeShape = new THREE.Shape();
+      flangeShape.absarc(0, 0, 74, 0, Math.PI * 2, false);
+      const bore = new THREE.Path();
+      bore.absarc(0, 0, 53, 0, Math.PI * 2, true);
+      flangeShape.holes.push(bore);
+
+      const fGeom = new THREE.ExtrudeGeometry(flangeShape, { depth: 8, bevelEnabled: false, curveSegments: 48 });
+      fGeom.rotateX(Math.PI / 2);
+      const fMesh = new THREE.Mesh(fGeom, matHousing);
+      fMesh.position.y = 0;
+      g.add(fMesh);
+
+      for (let a of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
+        const earShape = new THREE.Shape();
+        earShape.absarc(69, 0, 13.5, 0, Math.PI * 2, false);
+        const hole = new THREE.Path();
+        hole.absarc(69, 0, 5.5, 0, Math.PI * 2, true);
+        earShape.holes.push(hole);
+
+        const earGeom = new THREE.ExtrudeGeometry(earShape, { depth: 8, bevelEnabled: false, curveSegments: 24 });
+        earGeom.rotateX(Math.PI / 2);
+        const earMesh = new THREE.Mesh(earGeom, matHousing);
+        earMesh.position.y = 0;
+
+        const earGrp = new THREE.Group();
+        earGrp.rotation.y = a;
+        earGrp.add(earMesh);
+        g.add(earGrp);
+      }
+
+      const bodyProfile = [
+        new THREE.Vector2(45, 0), new THREE.Vector2(53, 0), new THREE.Vector2(64, 0),
+        new THREE.Vector2(50, -98), new THREE.Vector2(64, -98), new THREE.Vector2(64, -118),
+        new THREE.Vector2(46, -118), new THREE.Vector2(46, -98), new THREE.Vector2(42, 0)
+      ];
+      g.add(new THREE.Mesh(new THREE.LatheGeometry(bodyProfile, 48), matHousing));
+    }
+
+    // =========================================================================
+    // 3. INTERNAL COMPONENTS (ITEMS 3, 4, 5, 9–11)
+    // =========================================================================
+    function buildInternals() {
+      // Item 3: Disc Plate (Horseshoe)
+      const pShape = new THREE.Shape();
+      pShape.absarc(0, 0, 45, 0.45, Math.PI * 2 - 0.45, false);
+      const pInner = new THREE.Path();
+      pInner.absarc(0, 0, 40, 0.45, Math.PI * 2 - 0.45, true);
+      pShape.holes.push(pInner);
+
+      const pGeom = new THREE.ExtrudeGeometry(pShape, { depth: 3, bevelEnabled: false, curveSegments: 36 });
+      pGeom.rotateX(Math.PI / 2);
+      const pMesh = new THREE.Mesh(pGeom, matPlate);
+      pMesh.position.y = 0;
+      parts.plate.add(pMesh);
+
+      // Item 4: Leather Disc Face (2.5T, Ø89 mm)
+      const lMesh = new THREE.Mesh(new THREE.CylinderGeometry(44.5, 44.5, 2.5, 36), matLeather);
+      lMesh.position.y = -1;
+      parts.leather.add(lMesh);
+
+      // Item 5: Brass Backing Disc (5T, Ø70 mm)
+      const dMesh = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 5, 36), matDisc);
+      dMesh.position.y = -4.5;
+      parts.disc.add(dMesh);
+
+      // Items 9–11: Center Pin M8
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 18, 12), matSteel);
+      pin.position.y = -2;
+      const head = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 3.5, 6), matSteel);
+      head.position.y = 7;
+      const nut = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 3.5, 6), matSteel);
+      nut.position.y = -11;
+      parts.pin.add(pin, head, nut);
+
+      flapHinge.rotation.z = THREE.MathUtils.degToRad(35);
+    }
+
+    // =========================================================================
+    // 4. FASTENERS (ITEMS 6–8)
+    // =========================================================================
+    function buildFasteners() {
+      for (let a of [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2]) {
+        const bGrp = new THREE.Group();
+        const shank = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 28, 12), matSteel);
+        shank.position.set(69, 4, 0);
+        const head = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 8.5, 6, 6), matSteel);
+        head.position.set(69, 18, 0);
+        const nut = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 8.5, 6, 6), matSteel);
+        nut.position.set(69, -10, 0);
+        const washer = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 1.5, 12), matSteel);
+        washer.position.set(69, -6.5, 0);
+
+        bGrp.add(shank, head, nut, washer);
+        bGrp.rotation.y = a;
+        parts.bolts.add(bGrp);
+      }
+    }
+
+    // =========================================================================
+    // 5. WATER PARTICLE STREAM
+    // =========================================================================
+    const particleCount = 200;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleData = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const isA = (i % 28) < 18;
+      const idx = i % 28;
+      const th = isA ? (idx / 18) * Math.PI * 2 : ((idx - 18) / 10) * Math.PI * 2 + (Math.PI / 10);
+      const r = isA ? 48 : 26;
+      const y = isA ? 18 : 42;
+
+      particlePositions[i * 3 + 0] = Math.cos(th) * (r + 16);
+      particlePositions[i * 3 + 1] = y + 10;
+      particlePositions[i * 3 + 2] = Math.sin(th) * (r + 16);
+
+      particleData.push({
+        origX: Math.cos(th) * (r + 16), origY: y + 10, origZ: Math.sin(th) * (r + 16),
+        slotX: Math.cos(th) * r, slotY: y, slotZ: Math.sin(th) * r,
+        targetY: -110, speed: 0.8 + Math.random() * 0.7, p: Math.random()
+      });
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const waterParticles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x58a6ff, size: 4.5, transparent: true, opacity: 0.85 }));
+    groupAssembly.add(waterParticles);
+
+    // Build all geometry
+    buildStrainer();
+    buildHousing();
+    buildInternals();
+    buildFasteners();
+
+    // =========================================================================
+    // ISOLATE SPECIFIC COMPONENT LOGIC
+    // =========================================================================
+    const partMetaMap = {
+      all: {
+        title: "Full Assembly (IS:10805)",
+        text: "• Strainer on top (intake), Housing body at bottom.<br>• All internal check-valve parts and fasteners active."
+      },
+      strainer: {
+        title: "Item 2: Strainer (Brass)",
+        text: "• <strong>PCD:</strong> 138 mm with 4x Ø11 holes.<br>• <strong>Bore:</strong> Ø106 mm | <strong>Depth:</strong> 52 mm.<br>• <strong>18 Outer Slots:</strong> 27x10 mm (Detail A).<br>• <strong>10 Crown Slots:</strong> 16x10 mm (Detail B)."
+      },
+      housing: {
+        title: "Item 1: Housing Body (Brass)",
+        text: "• <strong>Height:</strong> 118 mm overall.<br>• <strong>Bottom Flange:</strong> Ø148 mm (4 bolt ears).<br>• <strong>Top Threaded Collar:</strong> Ø128 mm OD, Ø92 mm bore.<br>• <strong>Wall:</strong> ~8 mm maintained."
+      },
+      plate: {
+        title: "Item 3: Disc Plate (Brass)",
+        text: "• <strong>Type:</strong> Horseshoe retaining clamp.<br>• <strong>Thickness:</strong> 3 mm.<br>• Clamps the leather flap root tightly against the housing shoulder."
+      },
+      leather: {
+        title: "Item 4: Disc Face (Food Grade Leather)",
+        text: "• <strong>Thickness:</strong> 2.5T.<br>• <strong>Diameter:</strong> Ø89 mm with flexible hinge neck.<br>• Creates the water-tight backflow seal against the internal valve seat."
+      },
+      disc: {
+        title: "Item 5: Disc Backing (Brass)",
+        text: "• <strong>Diameter:</strong> Ø70 mm.<br>• <strong>Thickness:</strong> 5 mm.<br>• Clamps the leather face rigid and adds closing weight."
+      },
+      pin: {
+        title: "Items 9, 10, 11: Center Pin Fasteners",
+        text: "• <strong>Bolt:</strong> M8 x 1.25 x 16 mm long (Brass).<br>• Includes M8 Nut and brass washer clamping Items 4 & 5."
+      },
+      bolts: {
+        title: "Items 6, 7, 8: Flange Fasteners (Qty: 4 Sets)",
+        text: "• <strong>Bolt:</strong> M10 x 1.5 x 26 mm long (Brass).<br>• Includes 4x M10 Hex Nuts and Washers at PCD 138."
+      }
+    };
+
+    const partDropdown = document.getElementById('part-dropdown');
+    const partBtns = document.querySelectorAll('.part-btn');
+    const partMeta = document.getElementById('part-meta');
+
+    function isolatePart(selectedKey) {
+      // Sync dropdown & quick buttons
+      partDropdown.value = selectedKey;
+      partBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-part') === selectedKey);
+      });
+
+      // Update Info box
+      const meta = partMetaMap[selectedKey];
+      partMeta.innerHTML = `<strong>${meta.title}</strong><br>${meta.text}`;
+
+      // Show/Hide Geometry
+      if (selectedKey === 'all') {
+        Object.values(parts).forEach(g => g.visible = true);
+        flapHinge.visible = true;
+        waterParticles.visible = flowActive;
+        controls.target.set(0, 0, 0);
+      } else {
+        waterParticles.visible = false;
+
+        // Turn all off first
+        Object.keys(parts).forEach(k => parts[k].visible = false);
+        flapHinge.visible = false;
+
+        // Enable specific part
+        if (selectedKey === 'leather' || selectedKey === 'disc' || selectedKey === 'pin') {
+          flapHinge.visible = true;
+          parts[selectedKey].visible = true;
+          controls.target.set(0, 0, 0);
+        } else {
+          parts[selectedKey].visible = true;
+          if (selectedKey === 'housing') controls.target.set(0, -50, 0);
+          else if (selectedKey === 'strainer') controls.target.set(0, 25, 0);
+          else controls.target.set(0, 0, 0);
+        }
+      }
+    }
+
+    partDropdown.addEventListener('change', (e) => isolatePart(e.target.value));
+    partBtns.forEach(btn => {
+      btn.addEventListener('click', () => isolatePart(btn.getAttribute('data-part')));
+    });
+
+    // =========================================================================
+    // SLIDERS & VIEW TOOLS
+    // =========================================================================
+    const flapSlider = document.getElementById('flap-slider');
+    const valveAngleDeg = document.getElementById('valve-angle-deg');
+    flapSlider.addEventListener('input', (e) => {
+      const deg = parseFloat(e.target.value);
+      flapHinge.rotation.z = THREE.MathUtils.degToRad(deg);
+      valveAngleDeg.textContent = Math.round(deg) + '° ' + (deg > 1 ? '(Open)' : '(Closed)');
+    });
+
+    const expSlider = document.getElementById('explode-slider');
+    const expVal = document.getElementById('explode-val');
+    expSlider.addEventListener('input', (e) => {
+      const t = parseFloat(e.target.value) / 100;
+      expVal.textContent = Math.round(t * 100) + '%';
+      parts.strainer.position.y = t * 65;
+      parts.housing.position.y = -t * 65;
+      flapHinge.position.y = -t * 20;
+    });
+
+    let flowActive = true;
+    const btnFlow = document.getElementById('btn-flow');
+    const flowStatus = document.getElementById('flow-status');
+    btnFlow.addEventListener('click', () => {
+      flowActive = !flowActive;
+      waterParticles.visible = flowActive && (partDropdown.value === 'all');
+      btnFlow.classList.toggle('active', flowActive);
+      flowStatus.textContent = flowActive ? 'ON' : 'OFF';
+      if (!flowActive) {
+        flapSlider.value = 0;
+        flapHinge.rotation.z = 0;
+        valveAngleDeg.textContent = '0° (Closed)';
+      } else {
+        flapSlider.value = 35;
+        flapHinge.rotation.z = THREE.MathUtils.degToRad(35);
+        valveAngleDeg.textContent = '35° (Open)';
+      }
+    });
+
+    const btnCut = document.getElementById('btn-cutaway');
+    const cutStatus = document.getElementById('cut-status');
+    btnCut.addEventListener('click', () => {
+      cutawayActive = !cutawayActive;
+      allMaterials.forEach(m => m.clippingPlanes = cutawayActive ? [clipPlane] : []);
+      cutStatus.textContent = cutawayActive ? 'ON' : 'OFF';
+      btnCut.classList.toggle('active', cutawayActive);
+    });
+
+    const btnWire = document.getElementById('btn-wireframe');
+    const wireStatus = document.getElementById('wire-status');
+    btnWire.addEventListener('click', () => {
+      const isWire = !allMaterials[0].wireframe;
+      allMaterials.forEach(m => m.wireframe = isWire);
+      wireStatus.textContent = isWire ? 'ON' : 'OFF';
+      btnWire.classList.toggle('active', isWire);
+    });
+
+    const btnRot = document.getElementById('btn-autorotate');
+    const rotStatus = document.getElementById('rot-status');
+    btnRot.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      rotStatus.textContent = controls.autoRotate ? 'ON' : 'OFF';
+      btnRot.classList.toggle('active', controls.autoRotate);
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    // Render loop
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+
+      if (flowActive && partDropdown.value === 'all') {
+        const pos = pGeo.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+          const d = particleData[i];
+          d.p += 0.008 * d.speed;
+          if (d.p > 1.0) d.p = 0;
+
+          if (d.p < 0.4) {
+            const t = d.p / 0.4;
+            pos[i * 3 + 0] = THREE.MathUtils.lerp(d.origX, d.slotX, t);
+            pos[i * 3 + 1] = THREE.MathUtils.lerp(d.origY, d.slotY, t);
+            pos[i * 3 + 2] = THREE.MathUtils.lerp(d.origZ, d.slotZ, t);
+          } else {
+            const t = (d.p - 0.4) / 0.6;
+            pos[i * 3 + 0] = THREE.MathUtils.lerp(d.slotX, 0, t);
+            pos[i * 3 + 1] = THREE.MathUtils.lerp(d.slotY, d.targetY, t);
+            pos[i * 3 + 2] = THREE.MathUtils.lerp(d.slotZ, 0, t);
+          }
+        }
+        pGeo.attributes.position.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
